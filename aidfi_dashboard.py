@@ -124,4 +124,159 @@ if st.session_state.page == "register":
 
         elif email in users:
 
-            st.error("* Email*
+            st.error("* Email exists")
+
+
+        else:
+
+            users[email] = password
+
+            save_users(users)
+
+            st.success("Register Successfully")
+
+            st.session_state.page = "login"
+
+            st.rerun()
+
+
+
+    if st.button("Go Login"):
+
+        st.session_state.page = "login"
+
+        st.rerun()
+
+
+
+
+# =====================================================
+# LOGIN PAGE
+# =====================================================
+
+elif st.session_state.page == "login":
+
+
+    st.title("Login")
+
+
+    email = st.text_input("Email")
+
+    password = st.text_input("Password", type="password")
+
+
+    if st.button("Login"):
+
+
+        if email not in users:
+
+            st.error("* Email not registered")
+
+
+        elif users[email] != password:
+
+            st.error("* Wrong password")
+
+
+        else:
+
+            st.session_state.user = email
+
+            st.session_state.page = "admin"
+
+            st.rerun()
+
+
+
+    if st.button("Register"):
+
+        st.session_state.page = "register"
+
+        st.rerun()
+
+
+
+
+# =====================================================
+# ADMIN UPLOAD PAGE
+# =====================================================
+
+elif st.session_state.page == "admin":
+
+
+    st.title("Admin Evidence Upload")
+
+
+    st.write("Welcome:", st.session_state.user)
+
+
+    file = st.file_uploader("Upload Evidence")
+
+
+    if file:
+
+
+        if st.button("Analyze"):
+
+
+            report = analyze(file.name)
+
+
+            st.session_state.report = report
+
+
+            st.session_state.page = "output"
+
+            st.rerun()
+
+
+
+    if st.button("Logout"):
+
+        st.session_state.user = None
+
+        st.session_state.page = "login"
+
+        st.rerun()
+
+
+
+
+# =====================================================
+# OUTPUT PAGE
+# =====================================================
+
+elif st.session_state.page == "output":
+
+
+    st.title("Investigation Report")
+
+
+    report = st.session_state.report
+
+
+    for k, v in report.items():
+
+        st.write(k, ":", v)
+
+
+
+    pdf = create_pdf(report, st.session_state.user)
+
+
+    st.download_button(
+
+        "Download PDF",
+
+        open(pdf, "rb"),
+
+        file_name="report.pdf"
+
+    )
+
+
+    if st.button("Back to Admin"):
+
+        st.session_state.page = "admin"
+
+        st.rerun()
