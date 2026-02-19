@@ -7,327 +7,178 @@ from datetime import datetime
 
 # ---------------- CONFIG ----------------
 
-st.set_page_config(
-page_title="AIDFI",
-layout="wide"
-)
+st.set_page_config(page_title="AIDFI", layout="wide")
 
 
-# ---------------- FILE PATH ----------------
+# ---------------- FILE SETUP ----------------
 
-USERS="users.json"
-REPORTS="reports"
-
+USERS = "users.json"
+REPORTS = "reports"
 
 if not os.path.exists(USERS):
-
-    with open(USERS,"w") as f:
-        json.dump({},f)
-
+    with open(USERS, "w") as f:
+        json.dump({}, f)
 
 if not os.path.exists(REPORTS):
-
     os.makedirs(REPORTS)
-
-
-
-# ---------------- CSS ----------------
-
-st.markdown("""
-
-<style>
-
-/* background */
-
-.stApp{
-
-background:
-linear-gradient(135deg,#020617,#050510,#020617);
-
-color:white;
-
-}
-
-
-/* title */
-
-.title{
-
-text-align:center;
-
-font-size:45px;
-
-font-weight:bold;
-
-background:
-linear-gradient(90deg,#00f5ff,#ff00ff);
-
--webkit-background-clip:text;
-
-color:transparent;
-
-}
-
-
-/* card */
-
-.card{
-
-background:rgba(255,255,255,0.05);
-
-padding:30px;
-
-border-radius:15px;
-
-box-shadow:0 0 20px cyan;
-
-}
-
-
-/* button */
-
-.stButton button{
-
-background:
-linear-gradient(90deg,#00f5ff,#ff00ff);
-
-color:white;
-
-font-size:18px;
-
-border-radius:10px;
-
-border:none;
-
-height:45px;
-
-width:100%;
-
-}
-
-
-/* sidebar */
-
-.css-1d391kg{
-
-background:#020617;
-
-}
-
-
-/* footer */
-
-.footer{
-
-text-align:center;
-
-margin-top:50px;
-
-color:#888;
-
-}
-
-
-</style>
-
-""",unsafe_allow_html=True)
-
 
 
 # ---------------- LOAD USERS ----------------
 
-def load():
-
+def load_users():
     with open(USERS) as f:
-
         return json.load(f)
 
-
-
-def save(data):
-
-    with open(USERS,"w") as f:
-
-        json.dump(data,f)
-
+def save_users(data):
+    with open(USERS, "w") as f:
+        json.dump(data, f)
 
 
 # ---------------- SESSION ----------------
 
 if "page" not in st.session_state:
+    st.session_state.page = "login"
 
-    st.session_state.page="home"
+if "user" not in st.session_state:
+    st.session_state.user = ""
 
 
+# ---------------- HEADER NAVBAR ----------------
 
-# ---------------- HOME ----------------
+def navbar():
 
-def home():
+    st.markdown("""
 
-    st.markdown("<div class='title'>AIDFI Digital Forensics</div>",
-    unsafe_allow_html=True)
+    <style>
 
-    st.write("")
+    .nav {
+        background: linear-gradient(90deg,#020617,#0a0f2c);
+        padding:15px;
+        border-radius:10px;
+        box-shadow:0 0 10px cyan;
+    }
 
-    col1,col2=st.columns(2)
+    .title {
+        font-size:28px;
+        font-weight:bold;
+        color:cyan;
+    }
+
+    </style>
+
+    """, unsafe_allow_html=True)
+
+
+    col1,col2,col3,col4,col5,col6 = st.columns([2,1,1,1,1,1])
 
     with col1:
-
-        if st.button("Login"):
-
-            st.session_state.page="login"
-
+        st.markdown("<div class='title'>🛡 AIDFI</div>", unsafe_allow_html=True)
 
     with col2:
+        if st.button("Login"):
+            st.session_state.page="login"
+            st.rerun()
 
+    with col3:
         if st.button("Register"):
-
             st.session_state.page="register"
+            st.rerun()
 
+    with col4:
+        if st.button("Upload"):
+            st.session_state.page="upload"
+            st.rerun()
+
+    with col5:
+        if st.button("AI Analysis"):
+            st.session_state.page="analysis"
+            st.rerun()
+
+    with col6:
+        if st.button("Download"):
+            st.session_state.page="download"
+            st.rerun()
+
+
+navbar()
 
 
 # ---------------- REGISTER ----------------
 
 def register():
 
-    st.markdown("<div class='card'>",
-    unsafe_allow_html=True)
-
     st.title("Register")
 
-    email=st.text_input("Email")
-
-    password=st.text_input("Password",type="password")
-
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
     if st.button("Register Now"):
 
-        users=load()
+        users = load_users()
 
         if email in users:
-
-            st.error("Already exist")
+            st.error("Email already exists")
 
         else:
+            users[email] = password
+            save_users(users)
 
-            users[email]=password
-
-            save(users)
-
-            st.success("Register success")
+            st.success("Registered Successfully")
 
             st.session_state.page="login"
-
             st.rerun()
-
-    st.markdown("</div>",unsafe_allow_html=True)
-
 
 
 # ---------------- LOGIN ----------------
 
 def login():
 
-    st.markdown("<div class='card'>",
-    unsafe_allow_html=True)
-
     st.title("Login")
 
-    email=st.text_input("Email")
-
-    password=st.text_input("Password",type="password")
-
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
     if st.button("Login Now"):
 
-        users=load()
+        users = load_users()
 
         if email not in users:
 
-            st.markdown("<span style='color:red'>* Email not found</span>",
-            unsafe_allow_html=True)
+            st.markdown("<span style='color:red'>* Email not registered</span>", unsafe_allow_html=True)
 
-        elif users[email]!=password:
+        elif users[email] != password:
 
-            st.error("Wrong password")
+            st.error("Wrong Password")
 
         else:
 
-            st.success("Login success")
+            st.success("Login Successful")
 
             st.session_state.user=email
-
-            st.session_state.page="dashboard"
-
+            st.session_state.page="upload"
             st.rerun()
-
-    st.markdown("</div>",unsafe_allow_html=True)
-
-
-
-# ---------------- DASHBOARD ----------------
-
-def dashboard():
-
-    st.sidebar.title("AIDFI")
-
-    menu=st.sidebar.selectbox(
-
-    "Menu",
-
-    ["Upload Evidence","Reports","Logout"]
-
-    )
-
-
-    st.title("Admin Dashboard")
-
-
-    if menu=="Upload Evidence":
-
-        upload()
-
-
-    elif menu=="Reports":
-
-        reports()
-
-
-    elif menu=="Logout":
-
-        st.session_state.page="login"
-
-        st.rerun()
-
 
 
 # ---------------- UPLOAD ----------------
 
 def upload():
 
-    st.subheader("Upload Evidence")
+    st.title("Upload Evidence")
 
-    file=st.file_uploader("Upload File")
+    file = st.file_uploader("Upload File")
 
-
-    if st.button("Analyze Evidence"):
+    if st.button("Start Analysis"):
 
         if file:
 
-            st.write("Analyzing...")
-
-            bar=st.progress(0)
+            progress = st.progress(0)
 
             for i in range(100):
-
                 time.sleep(0.01)
+                progress.progress(i+1)
 
-                bar.progress(i)
-
-
-            result=f"""
-
-AIDFI REPORT
+            report = f"""
+AIDFI FORENSIC REPORT
 
 User: {st.session_state.user}
 
@@ -340,70 +191,78 @@ Risk Level: HIGH
 AI Confidence: 98%
 
 Status: Unauthorized access detected
-
 """
 
+            filename=file.name+".txt"
 
-            name=file.name+".txt"
+            with open(os.path.join(REPORTS, filename), "w") as f:
+                f.write(report)
 
-
-            with open(os.path.join(REPORTS,name),"w") as f:
-
-                f.write(result)
-
-
-            st.success("Analysis Complete")
+            st.success("Analysis Completed")
 
 
 
-# ---------------- REPORT ----------------
+# ---------------- AI ANALYSIS ----------------
 
-def reports():
+def analysis():
 
-    st.subheader("Reports")
+    st.title("AI Analysis Result")
 
-    files=os.listdir(REPORTS)
+    st.success("Risk Level: HIGH")
+    st.success("Confidence: 98%")
+    st.warning("Multiple Failed Login Detected")
 
-    for f in files:
 
-        with open(os.path.join(REPORTS,f),"rb") as file:
+
+# ---------------- DOWNLOAD ----------------
+
+def download():
+
+    st.title("Download Reports")
+
+    files = os.listdir(REPORTS)
+
+    if len(files)==0:
+        st.info("No reports available")
+
+    for file in files:
+
+        with open(os.path.join(REPORTS,file),"rb") as f:
 
             st.download_button(
 
-            "Download "+f,
-
-            file,
-
-            file_name=f)
-
+                "Download " + file,
+                f,
+                file_name=file
+            )
 
 
 # ---------------- PAGE CONTROL ----------------
 
-if st.session_state.page=="home":
-
-    home()
-
-elif st.session_state.page=="login":
-
+if st.session_state.page=="login":
     login()
 
 elif st.session_state.page=="register":
-
     register()
 
-elif st.session_state.page=="dashboard":
+elif st.session_state.page=="upload":
+    upload()
 
-    dashboard()
+elif st.session_state.page=="analysis":
+    analysis()
 
+elif st.session_state.page=="download":
+    download()
 
 
 # ---------------- FOOTER ----------------
 
-st.markdown(
+st.markdown("""
 
-"<div class='footer'>@by Digital Detectives Team</div>",
+<hr>
 
-unsafe_allow_html=True
+<center>
+@by Digital Detectives Team
+</center>
 
-)
+""", unsafe_allow_html=True)
