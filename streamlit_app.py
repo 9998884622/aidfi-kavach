@@ -1,4 +1,3 @@
-
 import streamlit as st
 import os
 import json
@@ -12,11 +11,10 @@ import firebase_config as fb
 
 st.set_page_config(
     page_title="AIDFI + SecureKavach",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    layout="wide"
 )
 
-# ---------------- SIMPLE DARK CSS ----------------
+# ---------------- CSS ----------------
 
 st.markdown("""
 <style>
@@ -31,12 +29,6 @@ st.markdown("""
     font-weight:bold;
 }
 
-.card {
-    background-color:#161b22;
-    padding:20px;
-    border-radius:10px;
-}
-
 .stButton button {
     background-color:#238636;
     color:white;
@@ -48,12 +40,12 @@ st.markdown("""
 
 # ---------------- FILE SETUP ----------------
 
-USERS="users.json"
-REPORT="report"
+USERS = "users.json"
+REPORT = "report"
 
 if not os.path.exists(USERS):
-    with open(USERS,"w") as f:
-        json.dump({},f)
+    with open(USERS, "w") as f:
+        json.dump({}, f)
 
 if not os.path.exists(REPORT):
     os.makedirs(REPORT)
@@ -61,76 +53,58 @@ if not os.path.exists(REPORT):
 # ---------------- FUNCTIONS ----------------
 
 def load_users():
-
     with open(USERS) as f:
         return json.load(f)
 
 def save_users(data):
-
-    with open(USERS,"w") as f:
-        json.dump(data,f)
-
+    with open(USERS, "w") as f:
+        json.dump(data, f)
 
 # ---------------- SESSION ----------------
 
 if "page" not in st.session_state:
-
-    st.session_state.page="home"
+    st.session_state.page = "home"
 
 if "user" not in st.session_state:
-
-    st.session_state.user=""
+    st.session_state.user = ""
 
 # ---------------- NAVBAR ----------------
 
-col1,col2,col3,col4,col5,col6 = st.columns(6)
+col1, col2, col3, col4, col5, col6 = st.columns(6)
 
 with col1:
-
     st.markdown("<div class='title'>🛡 AIDFI + SecureKavach</div>", unsafe_allow_html=True)
 
 with col2:
-
     if st.button("Home"):
-        st.session_state.page="home"
-        st.rerun()
+        st.session_state.page = "home"
 
 with col3:
-
     if st.button("Login"):
-        st.session_state.page="login"
-        st.rerun()
+        st.session_state.page = "login"
 
 with col4:
-
     if st.button("Register"):
-        st.session_state.page="register"
-        st.rerun()
+        st.session_state.page = "register"
 
 with col5:
-
     if st.button("Upload"):
-        st.session_state.page="upload"
-        st.rerun()
+        st.session_state.page = "upload"
 
 with col6:
-
     if st.button("Admin"):
-        st.session_state.page="admin"
-        st.rerun()
-
+        st.session_state.page = "admin"
 
 st.divider()
 
 # ---------------- HOME ----------------
 
 def home():
-
     st.subheader("Digital Forensics Investigation System")
-
-    with open("index.html") as f:
-
-        components.html(f.read(),height=600)
+    components.html("""
+    <h3>Welcome to AIDFI</h3>
+    <p>AI Powered Cyber Crime Investigation Tool</p>
+    """, height=300)
 
 # ---------------- REGISTER ----------------
 
@@ -138,25 +112,20 @@ def register():
 
     st.subheader("Register")
 
-    email=st.text_input("Email")
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
-    password=st.text_input("Password",type="password")
+    if st.button("Create Account"):
 
-    if st.button("Register"):
-
-        users=load_users()
+        users = load_users()
 
         if email in users:
-
-            st.error("User exists")
+            st.error("User already exists")
 
         else:
-
-            users[email]=password
-
+            users[email] = password
             save_users(users)
-
-            st.success("Registered")
+            st.success("Registration Successful")
 
 # ---------------- LOGIN ----------------
 
@@ -164,112 +133,105 @@ def login():
 
     st.subheader("Login")
 
-    email=st.text_input("Email")
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
-    password=st.text_input("Password",type="password")
+    if st.button("Login Now"):
 
-    if st.button("Login"):
+        users = load_users()
 
-        users=load_users()
+        if email in users and users[email] == password:
 
-        if email in users and users[email]==password:
-
-            st.session_state.user=email
-
-            st.success("Login Success")
+            st.session_state.user = email
+            st.success("Login Successful")
 
         else:
-
-            st.error("Invalid")
+            st.error("Invalid Login")
 
 # ---------------- UPLOAD ----------------
 
 def upload():
 
+    if not st.session_state.user:
+
+        st.warning("Login First")
+        return
+
     st.subheader("Upload Evidence")
 
-    file=st.file_uploader("Upload File")
+    file = st.file_uploader("Upload File")
 
-    lat=st.text_input("Latitude")
+    lat = st.text_input("Latitude")
+    lng = st.text_input("Longitude")
 
-    lng=st.text_input("Longitude")
-
-    if st.button("Analyze"):
+    if st.button("Start Analysis"):
 
         if file:
 
-            progress=st.progress(0)
+            progress = st.progress(0)
 
             for i in range(100):
 
                 time.sleep(0.01)
-
                 progress.progress(i+1)
 
-            report=f"""
+            risk = "HIGH"
+            confidence = "98%"
+
+            report = f"""
 User: {st.session_state.user}
 Time: {datetime.now()}
-Risk: HIGH
-Confidence: 98%
+Risk Level: {risk}
+Confidence: {confidence}
 """
 
-            filename=file.name+".txt"
+            filename = file.name + ".txt"
 
-            path=os.path.join(REPORT,filename)
+            path = os.path.join(REPORT, filename)
 
-            with open(path,"w") as f:
-
+            with open(path, "w") as f:
                 f.write(report)
 
-            fb.upload_image(path,filename)
+            fb.upload_file(path, filename)
 
             if lat and lng:
+                fb.save_location(st.session_state.user, lat, lng)
 
-                fb.save_location(st.session_state.user,lat,lng)
-
-            st.success("Analysis Done")
+            st.success("Analysis Complete")
 
 # ---------------- ADMIN ----------------
 
 def admin():
 
-    st.subheader("Admin Dashboard")
+    st.subheader("Admin Panel")
 
-    st.write("Intruder Images")
+    st.write("Uploaded Files:")
 
-    urls=fb.get_images()
+    files = fb.get_files()
 
-    for url in urls:
+    for file in files:
 
-        st.image(url,width=200)
+        st.write(file)
 
-    st.write("Locations")
+    st.write("Locations:")
 
-    data=fb.get_locations()
+    locations = fb.get_locations()
 
-    if data:
-
-        st.json(data)
+    st.json(locations)
 
 # ---------------- PAGE CONTROL ----------------
 
-if st.session_state.page=="home":
-
+if st.session_state.page == "home":
     home()
 
-elif st.session_state.page=="register":
-
+elif st.session_state.page == "register":
     register()
 
-elif st.session_state.page=="login":
-
+elif st.session_state.page == "login":
     login()
 
-elif st.session_state.page=="upload":
-
+elif st.session_state.page == "upload":
     upload()
 
-elif st.session_state.page=="admin":
-
+elif st.session_state.page == "admin":
     admin()
-```
