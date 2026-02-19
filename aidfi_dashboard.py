@@ -1,224 +1,409 @@
 import streamlit as st
-import json
 import os
-
-# ---------- SETTINGS ----------
-
-st.set_page_config(page_title="AIDFI Dashboard", layout="centered")
-
-USERS_FILE = "users.json"
-REPORTS_FOLDER = "reports"
+import json
+import time
+from datetime import datetime
 
 
-# ---------- CREATE FILES IF NOT EXIST ----------
+# ---------------- CONFIG ----------------
 
-if not os.path.exists(USERS_FILE):
-    with open(USERS_FILE, "w") as f:
-        json.dump({}, f)
-
-if not os.path.exists(REPORTS_FOLDER):
-    os.makedirs(REPORTS_FOLDER)
+st.set_page_config(
+page_title="AIDFI",
+layout="wide"
+)
 
 
-# ---------- BACKGROUND ----------
+# ---------------- FILE PATH ----------------
 
-def set_bg():
-
-    bg_url = "https://raw.githubusercontent.com/9998884622/aidfi-dashboard/main/images/bg.jpg"
-
-    st.markdown(f"""
-    <style>
-
-    .stApp {{
-    background-image: url("{bg_url}");
-    background-size: cover;
-    }}
-
-    .box {{
-    background: rgba(0,0,0,0.7);
-    padding: 30px;
-    border-radius: 15px;
-    color: white;
-    }}
-
-    </style>
-    """, unsafe_allow_html=True)
-
-set_bg()
+USERS="users.json"
+REPORTS="reports"
 
 
-# ---------- LOAD USERS ----------
+if not os.path.exists(USERS):
 
-def load_users():
+    with open(USERS,"w") as f:
+        json.dump({},f)
 
-    with open(USERS_FILE) as f:
+
+if not os.path.exists(REPORTS):
+
+    os.makedirs(REPORTS)
+
+
+
+# ---------------- CSS ----------------
+
+st.markdown("""
+
+<style>
+
+/* background */
+
+.stApp{
+
+background:
+linear-gradient(135deg,#020617,#050510,#020617);
+
+color:white;
+
+}
+
+
+/* title */
+
+.title{
+
+text-align:center;
+
+font-size:45px;
+
+font-weight:bold;
+
+background:
+linear-gradient(90deg,#00f5ff,#ff00ff);
+
+-webkit-background-clip:text;
+
+color:transparent;
+
+}
+
+
+/* card */
+
+.card{
+
+background:rgba(255,255,255,0.05);
+
+padding:30px;
+
+border-radius:15px;
+
+box-shadow:0 0 20px cyan;
+
+}
+
+
+/* button */
+
+.stButton button{
+
+background:
+linear-gradient(90deg,#00f5ff,#ff00ff);
+
+color:white;
+
+font-size:18px;
+
+border-radius:10px;
+
+border:none;
+
+height:45px;
+
+width:100%;
+
+}
+
+
+/* sidebar */
+
+.css-1d391kg{
+
+background:#020617;
+
+}
+
+
+/* footer */
+
+.footer{
+
+text-align:center;
+
+margin-top:50px;
+
+color:#888;
+
+}
+
+
+</style>
+
+""",unsafe_allow_html=True)
+
+
+
+# ---------------- LOAD USERS ----------------
+
+def load():
+
+    with open(USERS) as f:
+
         return json.load(f)
 
 
-def save_users(users):
 
-    with open(USERS_FILE, "w") as f:
-        json.dump(users, f)
+def save(data):
+
+    with open(USERS,"w") as f:
+
+        json.dump(data,f)
 
 
-# ---------- SESSION ----------
+
+# ---------------- SESSION ----------------
 
 if "page" not in st.session_state:
-    st.session_state.page = "login"
+
+    st.session_state.page="home"
 
 
-# ---------- REGISTER PAGE ----------
+
+# ---------------- HOME ----------------
+
+def home():
+
+    st.markdown("<div class='title'>AIDFI Digital Forensics</div>",
+    unsafe_allow_html=True)
+
+    st.write("")
+
+    col1,col2=st.columns(2)
+
+    with col1:
+
+        if st.button("Login"):
+
+            st.session_state.page="login"
+
+
+    with col2:
+
+        if st.button("Register"):
+
+            st.session_state.page="register"
+
+
+
+# ---------------- REGISTER ----------------
 
 def register():
 
-    st.markdown('<div class="box">', unsafe_allow_html=True)
+    st.markdown("<div class='card'>",
+    unsafe_allow_html=True)
 
     st.title("Register")
 
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
+    email=st.text_input("Email")
 
-    if st.button("Register"):
+    password=st.text_input("Password",type="password")
 
-        users = load_users()
+
+    if st.button("Register Now"):
+
+        users=load()
 
         if email in users:
 
-            st.error("Email already exists")
+            st.error("Already exist")
 
         else:
 
-            users[email] = password
-            save_users(users)
+            users[email]=password
 
-            st.success("Registered Successfully")
+            save(users)
 
-            st.session_state.page = "login"
+            st.success("Register success")
+
+            st.session_state.page="login"
+
             st.rerun()
 
-    st.button("Go to Login", on_click=lambda:
-              st.session_state.update(page="login"))
-
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>",unsafe_allow_html=True)
 
 
-# ---------- LOGIN PAGE ----------
+
+# ---------------- LOGIN ----------------
 
 def login():
 
-    st.markdown('<div class="box">', unsafe_allow_html=True)
+    st.markdown("<div class='card'>",
+    unsafe_allow_html=True)
 
     st.title("Login")
 
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
+    email=st.text_input("Email")
 
-    if st.button("Login"):
+    password=st.text_input("Password",type="password")
 
-        users = load_users()
+
+    if st.button("Login Now"):
+
+        users=load()
 
         if email not in users:
 
-            st.markdown(
-                "<span style='color:red'>* Email not registered</span>",
-                unsafe_allow_html=True
-            )
+            st.markdown("<span style='color:red'>* Email not found</span>",
+            unsafe_allow_html=True)
 
-        elif users[email] != password:
+        elif users[email]!=password:
 
             st.error("Wrong password")
 
         else:
 
-            st.success("Login Successful")
+            st.success("Login success")
 
-            st.session_state.page = "admin"
+            st.session_state.user=email
+
+            st.session_state.page="dashboard"
+
             st.rerun()
 
-    st.button("Go to Register", on_click=lambda:
-              st.session_state.update(page="register"))
-
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>",unsafe_allow_html=True)
 
 
-# ---------- ADMIN PAGE ----------
 
-def admin():
+# ---------------- DASHBOARD ----------------
 
-    st.markdown('<div class="box">', unsafe_allow_html=True)
+def dashboard():
 
-    st.title("Admin Upload")
+    st.sidebar.title("AIDFI")
 
-    file = st.file_uploader("Upload Report")
+    menu=st.sidebar.selectbox(
 
-    if st.button("Upload"):
+    "Menu",
+
+    ["Upload Evidence","Reports","Logout"]
+
+    )
+
+
+    st.title("Admin Dashboard")
+
+
+    if menu=="Upload Evidence":
+
+        upload()
+
+
+    elif menu=="Reports":
+
+        reports()
+
+
+    elif menu=="Logout":
+
+        st.session_state.page="login"
+
+        st.rerun()
+
+
+
+# ---------------- UPLOAD ----------------
+
+def upload():
+
+    st.subheader("Upload Evidence")
+
+    file=st.file_uploader("Upload File")
+
+
+    if st.button("Analyze Evidence"):
 
         if file:
 
-            path = os.path.join(REPORTS_FOLDER, file.name)
+            st.write("Analyzing...")
 
-            with open(path, "wb") as f:
-                f.write(file.read())
+            bar=st.progress(0)
 
-            st.success("Uploaded Successfully")
+            for i in range(100):
 
-            st.session_state.page = "output"
-            st.rerun()
+                time.sleep(0.01)
 
-    st.button("Logout", on_click=lambda:
-              st.session_state.update(page="login"))
-
-    st.markdown('</div>', unsafe_allow_html=True)
+                bar.progress(i)
 
 
-# ---------- OUTPUT PAGE ----------
+            result=f"""
 
-def output():
+AIDFI REPORT
 
-    st.markdown('<div class="box">', unsafe_allow_html=True)
+User: {st.session_state.user}
 
-    st.title("Reports")
+Time: {datetime.now()}
 
-    files = os.listdir(REPORTS_FOLDER)
+Suspicious Events: 42
 
-    if files:
+Risk Level: HIGH
 
-        for file in files:
+AI Confidence: 98%
 
-            st.write(file)
+Status: Unauthorized access detected
 
-            with open(os.path.join(REPORTS_FOLDER, file), "rb") as f:
-
-                st.download_button(
-                    "Download",
-                    f,
-                    file_name=file
-                )
-
-    else:
-
-        st.write("No reports found")
-
-    st.button("Back", on_click=lambda:
-              st.session_state.update(page="admin"))
-
-    st.markdown('</div>', unsafe_allow_html=True)
+"""
 
 
-# ---------- PAGE CONTROL ----------
+            name=file.name+".txt"
 
-if st.session_state.page == "login":
+
+            with open(os.path.join(REPORTS,name),"w") as f:
+
+                f.write(result)
+
+
+            st.success("Analysis Complete")
+
+
+
+# ---------------- REPORT ----------------
+
+def reports():
+
+    st.subheader("Reports")
+
+    files=os.listdir(REPORTS)
+
+    for f in files:
+
+        with open(os.path.join(REPORTS,f),"rb") as file:
+
+            st.download_button(
+
+            "Download "+f,
+
+            file,
+
+            file_name=f)
+
+
+
+# ---------------- PAGE CONTROL ----------------
+
+if st.session_state.page=="home":
+
+    home()
+
+elif st.session_state.page=="login":
 
     login()
 
-elif st.session_state.page == "register":
+elif st.session_state.page=="register":
 
     register()
 
-elif st.session_state.page == "admin":
+elif st.session_state.page=="dashboard":
 
-    admin()
+    dashboard()
 
-elif st.session_state.page == "output":
 
-    output()
+
+# ---------------- FOOTER ----------------
+
+st.markdown(
+
+"<div class='footer'>@by Digital Detectives Team</div>",
+
+unsafe_allow_html=True
+
+)
